@@ -315,6 +315,7 @@ def get_sensors_near(db: Session, redis: RedisClient, mongodb: MongoDBClient, la
     list_document = mongodb.get_near_sensors(latitude, longitude, radius)
     list_sensors = []
 
+    return list_document[0]
     for document in list_document:
         sensor_id = document['id']
         db_sensor = get_sensor(db, mongodb, sensor_id)
@@ -335,11 +336,10 @@ def get_sensors_near(db: Session, redis: RedisClient, mongodb: MongoDBClient, la
             except json.JSONDecodeError as e:
                 raise HTTPException(
                     status_code=400, detail=f"Error parsing data for sensor {sensor_id}: {e}")
-
         # Construct the sensor object, using default values if dynamic data is missing
         list_sensors.append(schemas.Sensor(
-            id=db_sensor.id,
-            name=db_sensor.name,
+            id=db_sensor["id"],
+            name=db_sensor['name'],
             latitude=document.get('latitude', 0),
             longitude=document.get('longitude', 0),
             joined_at=db_sensor.joined_at.strftime("%m/%d/%Y, %H:%M:%S"),
