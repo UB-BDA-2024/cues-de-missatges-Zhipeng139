@@ -45,7 +45,7 @@ def clear_dbs():
 
 # TODO ADD all your tests in test_*.py files:
 
-
+# Post Data
 def test_create_sensor_temperatura_1():
     """A sensor can be properly created"""
     response = client.post("/sensors", json={"name": "Sensor Temperatura 1", "latitude": 1.0, "longitude": 1.0, "type": "Temperatura", "mac_address": "00:00:00:00:00:00", "manufacturer": "Dummy",
@@ -80,15 +80,134 @@ def test_create_sensor_temperatura_2():
                                "model": "Dummy Temp", "serie_number": "0000 0000 0000 0000", "firmware_version": "1.0", "description": "Sensor de temperatura model Dummy Temp del fabricant Dummy"}
 
 
-def test_post_sensor_data_temperatura_1():
+# Time Scale
+
+def test_post_sensor_data_dia_1():
     response = client.post("/sensors/1/data", json={"temperature": 1.0, "humidity": 1.0,
                            "battery_level": 1.0, "last_seen": "2020-01-01T00:00:00.000Z"})
     assert response.status_code == 200
 
 
+def test_post_sensor_data_dia_2():
+    response = client.post("/sensors/1/data", json={"temperature": 15.0, "humidity": 1.0,
+                           "battery_level": 1.0, "last_seen": "2020-01-02T00:00:00.000Z"})
+    assert response.status_code == 200
+
+
+def test_post_sensor_data_dia_3():
+    response = client.post("/sensors/1/data", json={"temperature": 18.0, "humidity": 1.0,
+                           "battery_level": 0.9, "last_seen": "2020-01-03T00:00:00.000Z"})
+    assert response.status_code == 200
+
+
+def test_post_sensor_data_veolicitat_hora_1():
+    response = client.post("/sensors/2/data", json={
+                           "velocity": 1.0, "battery_level": 1.0, "last_seen": "2020-01-01T00:00:00.000Z"})
+    assert response.status_code == 200
+
+
+def test_post_sensor_data_veolicitat_hora_2():
+    response = client.post("/sensors/2/data", json={
+                           "velocity": 15.0, "battery_level": 1.0, "last_seen": "2020-01-01T01:00:00.000Z"})
+    assert response.status_code == 200
+
+
+def test_post_sensor_data_veolicitat_hora_3():
+    response = client.post("/sensors/2/data", json={
+                           "velocity": 18.0, "battery_level": 0.9, "last_seen": "2020-01-01T02:00:00.000Z"})
+    assert response.status_code == 200
+
+
+def test_post_sensor_data_veolicitat_week_1():
+    response = client.post("/sensors/3/data", json={
+                           "velocity": 1.0, "battery_level": 1.0, "last_seen": "2020-01-01T00:00:00.000Z"})
+    assert response.status_code == 200
+
+
+def test_post_sensor_data_veolicitat_week_2():
+    response = client.post("/sensors/3/data", json={
+                           "velocity": 15.0, "battery_level": 1.0, "last_seen": "2020-01-08T00:00:00.000Z"})
+    assert response.status_code == 200
+
+
+def test_post_sensor_data_veolicitat_week_3():
+    response = client.post("/sensors/3/data", json={
+                           "velocity": 18.0, "battery_level": 0.9, "last_seen": "2020-01-15T00:00:00.000Z"})
+    assert response.status_code == 200
+
+
+def test_get_sensor_data_1_day():
+    """We can get a sensor by its id"""
+    response = client.get(
+        "/sensors/1/data?from=2020-01-01T00:00:00.000Z&to=2020-01-03T00:00:00.000Z&bucket=day")
+    assert response.status_code == 200
+    json = response.json()
+    assert len(json) == 3
+
+
+def test_get_sensor_data_1_week():
+    response = client.get(
+        "/sensors/1/data?from=2020-01-01T00:00:00.000Z&to=2020-01-07T00:00:00.000Z&bucket=week")
+    assert response.status_code == 200
+    json = response.json()
+    assert len(json) == 1
+
+
+def test_get_sensor_data_2_hour():
+    response = client.get(
+        "/sensors/2/data?from=2020-01-01T00:00:00.000Z&to=2020-01-01T02:00:00.000Z&bucket=hour")
+    assert response.status_code == 200
+    json = response.json()
+    assert len(json) == 3
+
+
+def test_get_sensor_data_2_day():
+    response = client.get(
+        "/sensors/2/data?from=2020-01-01T00:00:00.000Z&to=2020-01-02T00:00:00.000Z&bucket=day")
+    assert response.status_code == 200
+    json = response.json()
+    assert len(json) == 1
+
+
+def test_get_sensor_data_3_week():
+    response = client.get(
+        "/sensors/3/data?from=2020-01-01T00:00:00.000Z&to=2020-01-15T00:00:00.000Z&bucket=week")
+    assert response.status_code == 200
+    json = response.json()
+    assert len(json) == 3
+
+
+def test_get_sensor_data_3_month():
+    response = client.get(
+        "/sensors/3/data?from=2020-01-01T00:00:00.000Z&to=2020-01-31T00:00:00.000Z&bucket=month")
+    assert response.status_code == 200
+    json = response.json()
+    assert len(json) == 1
+
+
+def test_post_sensor_data_not_exists():
+    response = client.post("/sensors/5/data", json={"temperature": 1.0, "humidity": 1.0,
+                           "battery_level": 1.0, "last_seen": "2020-01-01T00:00:00.000Z"})
+    assert response.status_code == 404
+    assert "Sensor not found" in response.text
+
+
+def test_get_sensor_data_not_exists():
+    response = client.get("/sensors/5/data")
+    assert response.status_code == 404
+    assert "Sensor not found" in response.text
+
+
+# Columnar
+def test_post_sensor_data_temperatura_1():
+    response = client.post("/sensors/1/data", json={"temperature": 1.0, "humidity": 1.0,
+                           "battery_level": 1.0, "last_seen": "2020-01-04T00:00:00.000Z"})
+    assert response.status_code == 200
+
+
 def test_post_sensor_data_temperatura_2():
     response = client.post("/sensors/1/data", json={"temperature": 4.0, "humidity": 1.0,
-                           "battery_level": 1.0, "last_seen": "2020-01-01T00:00:01.000Z"})
+                           "battery_level": 1.0, "last_seen": "2020-01-05T00:00:01.000Z"})
     assert response.status_code == 200
 
 
@@ -106,7 +225,7 @@ def test_post_sensor_data_temperatura_4():
 
 def test_post_sensor_data_veolicitat_1():
     response = client.post("/sensors/2/data", json={
-                           "velocity": 1.0, "battery_level": 0.1, "last_seen": "2020-01-01T00:00:00.000Z"})
+                           "velocity": 1.0, "battery_level": 0.1, "last_seen": "2020-01-04T00:00:00.000Z"})
     assert response.status_code == 200
 
 
@@ -124,8 +243,8 @@ def test_get_values_sensor_temperatura():
             {
                 "id": 1,
                 "name": "Sensor Temperatura 1",
-                "latitude": 1,
-                "longitude": 1,
+                "latitude": 1.0,
+                "longitude": 1.0,
                 "type": "Temperatura",
                 "mac_address": "00:00:00:00:00:00",
                 "manufacturer": "Dummy",
@@ -133,17 +252,19 @@ def test_get_values_sensor_temperatura():
                 "serie_number": "0000 0000 0000 0000",
                 "firmware_version": "1.0",
                 "description": "Sensor de temperatura model Dummy Temp del fabricant Dummy",
-                "values": [{
-                    "max_temperature": 4,
-                    "min_temperature": 1,
-                    "average_temperature": 2.5
-                }]
+                "values": [
+                    {
+                        "max_temperature": 18.0,
+                        "min_temperature": 1.0,
+                        "average_temperature": 7.800000190734863
+                    }
+                ]
             },
             {
                 "id": 4,
                 "name": "Sensor Temperatura 2",
-                "latitude": 2,
-                "longitude": 2,
+                "latitude": 2.0,
+                "longitude": 2.0,
                 "type": "Temperatura",
                 "mac_address": "00:00:00:00:00:03",
                 "manufacturer": "Dummy",
@@ -151,11 +272,13 @@ def test_get_values_sensor_temperatura():
                 "serie_number": "0000 0000 0000 0000",
                 "firmware_version": "1.0",
                 "description": "Sensor de temperatura model Dummy Temp del fabricant Dummy",
-                "values": [{
-                        "max_temperature": 17,
-                        "min_temperature": 15,
-                        "average_temperature": 16
-                }]
+                "values": [
+                    {
+                        "max_temperature": 17.0,
+                        "min_temperature": 15.0,
+                        "average_temperature": 16.0
+                    }
+                ]
             }
         ]
     }
