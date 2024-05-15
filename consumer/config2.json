@@ -1,0 +1,9 @@
+{
+    "queue_name": "test2",
+    "rabbitmq": {
+      "host": "rabbitmq",
+      "port": 5672,
+      "username": "guest",
+      "password": "guest"
+    }
+  }

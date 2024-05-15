@@ -180,3 +180,9 @@ def exemple_queue():
     # Publish here the data to the queue
     publisher.publish_to('test',ExamplePayload("holaaaaa"))
     return {"message": "Data published to the queue"}
+
+@router.post("/exemple/queue2")
+def exemple_queue():
+    # Publish here the data to the queue
+    publisher.publish_to('test2',ExamplePayload("holaaaaa2"))
+    return {"message": "Data published to the queue"}

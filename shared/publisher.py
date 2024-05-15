@@ -36,7 +36,7 @@ class Publisher:
     def _declare_queue(self, queue_name):
         try:
             # Check if the queue exists
-            self.channel.queue_declare(queue=queue_name, passive=True)
+            self.channel.queue_declare(queue=queue_name)
         except pika.exceptions.ChannelClosedByBroker:
             # Queue does not exist, create it
             self.channel = self.connection.channel()  # Re-open the channel
