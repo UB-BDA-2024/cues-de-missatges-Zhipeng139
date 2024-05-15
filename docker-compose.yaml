@@ -32,6 +32,7 @@ services:
       MONGO_URL: mongodb://mongodb:27017
       ELASTICSEARCH_URL: http://elasticsearch:9200
       CASSANDRA_URL: cassandra://cassandra:9042
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
     networks:
       - app_network
 
@@ -47,7 +48,23 @@ services:
         - rabbitmq_log:/var/log/rabbitmq
     networks:
         - app_network
+
   
+  consumer:
+      build:
+        context: ./
+        dockerfile: consumer/Dockerfile
+      volumes:
+        - ./shared:/app/shared
+        - ./consumer:/app/consumer
+      depends_on:
+        - rabbitmq
+      environment:
+        RABBITMQ_HOST: rabbitmq
+        RABBITMQ_PORT: 5672
+      networks:
+        - app_network
+
   postgreSQL:
     image: postgres:14-alpine
     volumes:

@@ -1,13 +1,11 @@
 import pika
 import logging
-import time
-from threading import Thread
 
 logging.basicConfig(level=logging.INFO)
 
 QUEUE_NAME = 'test'
 
-class Subscriber:
+class Consumer:
     def __init__(self):
         self.credentials = pika.PlainCredentials('guest', 'guest')
         self.parameters = pika.ConnectionParameters('rabbitmq', 5672, '/', self.credentials)
@@ -41,8 +39,6 @@ class Subscriber:
             self.channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback, auto_ack=True)
             logging.info("Started consuming messages")
             self.channel.start_consuming()
-            thread = Thread(target = self.channel.start_consuming)
-            thread.start()
         except Exception as e:
             logging.error(f"Error during consumption: {e}")
             raise e
@@ -51,3 +47,8 @@ class Subscriber:
         if self.conn:
             self.conn.close()
             logging.info("Connection to RabbitMQ closed")
+
+if __name__ == "__main__":
+    consumer = Consumer()
+    consumer.consume()
+    consumer.close()

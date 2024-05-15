@@ -12,6 +12,13 @@ from shared.sensors.repository import DataCommand
 from shared.timescale import Timescale
 from shared.sensors import repository, schemas
 from shared.cassandra_client import CassandraClient
+from shared.subscriber import Subscriber
+
+router = APIRouter(
+    prefix="/sensors",
+    responses={404: {"description": "Not found"}},
+    tags=["sensors"],
+)
 
 def get_db():
     db = SessionLocal()
@@ -62,15 +69,8 @@ def get_cassandra_client():
     finally:
         cassandra.close()
         
+
 publisher = Publisher()
-
-router = APIRouter(
-    prefix="/sensors",
-    responses={404: {"description": "Not found"}},
-    tags=["sensors"],
-)
-
-
 
 @router.get("/near")
 def get_sensors_near(latitude: float, longitude: float, radius: float, db: Session = Depends(get_db), mongodb_client: MongoDBClient = Depends(get_mongodb_client), redis: RedisClient = Depends(get_redis_client)):

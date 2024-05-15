@@ -1,13 +1,12 @@
 import json
+import os
+import sys
 
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 from shared.subscriber import Subscriber
 
-subscriber = Subscriber()
 
-
-def callback(ch, method, properties, body):
-    data = json.loads(body)
-    print("Received data:", data)
-
-
-subscriber.subscribe(callback)
+if __name__ == "__main__":
+    subscriber = Subscriber()
+    subscriber.consume()
+    subscriber.close()
