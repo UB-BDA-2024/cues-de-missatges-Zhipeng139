@@ -14,6 +14,13 @@ COPY ./consumer consumer/
 # COPY requirements.txt .
 # RUN pip install --no-cache-dir -r requirements.txt
 COPY requirements.txt .
-RUN pip install -r requirements.txt
-# Specify the command to run when the container starts
-CMD ["python", "consumer/main.py"]
+RUN pip install --no-cache-dir -r requirements.txt
+# Copy the start script
+COPY ./consumer/start.sh ./start.sh
+RUN chmod +x ./start.sh
+
+# Set PYTHONPATH to include the shared directory
+ENV PYTHONPATH="/app/shared:/app/consumer"
+
+# Command to run when the container starts
+CMD ["./start.sh"]

@@ -32,7 +32,17 @@ class Publisher:
                 else:
                     logging.critical("All connection attempts failed")
                     raise e
-
+                
+    def _declare_queue(self, queue_name):
+        try:
+            # Check if the queue exists
+            self.channel.queue_declare(queue=queue_name, passive=True)
+        except pika.exceptions.ChannelClosedByBroker:
+            # Queue does not exist, create it
+            self.channel = self.connection.channel()  # Re-open the channel
+            self.channel.queue_declare(queue=queue_name)
+            logging.info(f"Queue '{queue_name}' created")
+            
     def publish(self, message):
         try:
             self.channel.basic_publish(exchange='', routing_key=QUEUE_NAME, body=message.to_json())
@@ -43,10 +53,15 @@ class Publisher:
         
     def publish_to(self, routing_key, message):
         try:
-            self.channel.basic_publish(exchange='', routing_key=routing_key, body=json.dumps(message))
-            logging.info(f" [x] Sent {message}")
+            self._declare_queue(routing_key)
+            self.channel.basic_publish(
+                exchange='',
+                routing_key=routing_key,
+                body=message.to_json()
+            )
+            logging.info(f" [x] Sent {message} to {routing_key}")
         except Exception as e:
-            logging.error(f"Failed to publish message: {e}")
+            logging.error(f"Failed to publish message to {routing_key}: {e}")
             raise e
 
     def close(self):

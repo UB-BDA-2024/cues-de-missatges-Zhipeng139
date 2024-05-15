@@ -61,7 +61,8 @@ services:
         - rabbitmq
       environment:
         RABBITMQ_HOST: rabbitmq
-        RABBITMQ_PORT: 5672
+        RABBITMQ_PORT: 5672 
+        PYTHONPATH: /app/shared:/app/consumer
       networks:
         - app_network
 

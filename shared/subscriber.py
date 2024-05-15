@@ -3,14 +3,11 @@ import logging
 import time
 from threading import Thread
 
-logging.basicConfig(level=logging.INFO)
-
-QUEUE_NAME = 'test'
-
 class Subscriber:
-    def __init__(self):
-        self.credentials = pika.PlainCredentials('guest', 'guest')
-        self.parameters = pika.ConnectionParameters('rabbitmq', 5672, '/', self.credentials)
+    def __init__(self, config):
+        self.queue_name = config['queue_name']
+        self.credentials = pika.PlainCredentials(config['rabbitmq']['username'], config['rabbitmq']['password'])
+        self.parameters = pika.ConnectionParameters(config['rabbitmq']['host'], config['rabbitmq']['port'], '/', self.credentials)
         self.conn = None
         self.channel = None
         self.connect()
@@ -22,7 +19,7 @@ class Subscriber:
                 logging.info(f"Attempting to connect to RabbitMQ (attempt {attempt + 1}/{retries})")
                 self.conn = pika.BlockingConnection(self.parameters)
                 self.channel = self.conn.channel()
-                self.channel.queue_declare(queue=QUEUE_NAME)
+                self.channel.queue_declare(queue=self.queue_name)
                 logging.info("Successfully connected to RabbitMQ")
                 break
             except pika.exceptions.AMQPConnectionError as e:
@@ -38,11 +35,9 @@ class Subscriber:
             logging.info(f"Received message: {body}")
 
         try:
-            self.channel.basic_consume(queue=QUEUE_NAME, on_message_callback=callback, auto_ack=True)
+            self.channel.basic_consume(queue=self.queue_name, on_message_callback=callback, auto_ack=True)
             logging.info("Started consuming messages")
             self.channel.start_consuming()
-            thread = Thread(target = self.channel.start_consuming)
-            thread.start()
         except Exception as e:
             logging.error(f"Error during consumption: {e}")
             raise e
