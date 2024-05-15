@@ -76,3 +76,13 @@ class Timescale:
             (bucket_size, sensor_id, from_date, to_date)
         )
         return self.cursor.fetchall()
+    
+    def delete_sensor_data(self, sensor_id):
+        """
+        Deletes sensor data from the database.
+
+        Args:
+            sensor_id (str): The ID of the sensor.
+        """
+        self.cursor.execute("DELETE FROM sensor_data WHERE sensor_id = %s", (sensor_id,))
+        self.conn.commit()

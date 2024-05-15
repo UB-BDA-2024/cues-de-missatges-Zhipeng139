@@ -39,6 +39,16 @@ class ElasticsearchClient:
     
     def index_exists(self, index_name):
         return self.client.indices.exists(index=index_name)
+    
+    def delete_sensor_data(self, index_name, sensor_id):
+        query = {
+            "query": {
+                "match": {
+                    "sensor_id": sensor_id
+                }
+            }
+        }
+        return self.client.delete_by_query(index=index_name, body=query)
 
     
     

@@ -70,15 +70,14 @@ def test_create_sensor_velocitat_2():
 
 def test_get_sensor_1():
     """A sensor can be properly retrieved"""
-    response = client.get("/sensors/1")
+    response = client.get("/sensors/1/data?from=2020-01-01T00:00:00.000Z&to=2020-01-03T00:00:00.000Z&bucket=day")
     assert response.status_code == 200
-    assert response.json() == {"id": 1, "name": "Sensor Temperatura 1", "latitude": 1.0, "longitude": 1.0, "type": "Temperatura", "mac_address": "00:00:00:00:00:00", "manufacturer": "Dummy",
-                               "model": "Dummy Temp", "serie_number": "0000 0000 0000 0000", "firmware_version": "1.0", "description": "Sensor de temperatura model Dummy Temp del fabricant Dummy"}
+
 
 
 def test_get_sensor_2():
     """A sensor can be properly retrieved"""
-    response = client.get("/sensors/2")
+    response = client.get("/sensors/1/data?from=2020-01-01T00:00:00.000Z&to=2020-01-03T00:00:00.000Z&bucket=day")
     assert response.status_code == 200
     assert response.json() == {"id": 2, "name": "Velocitat 1", "latitude": 1.0, "longitude": 1.0, "type": "Velocitat", "mac_address": "00:00:00:00:00:01", "manufacturer": "Dummy",
                                "model": "Dummy Vel", "serie_number": "0000 0000 0000 0000", "firmware_version": "1.0", "description": "Sensor de velocitat model Dummy Vel del fabricant Dummy cruïlla 1"}

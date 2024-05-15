@@ -131,3 +131,10 @@ class CassandraClient:
             "sensor_id": row.sensor_id,
             "battery_level": round(row.battery_level, 2)
         } for row in result]
+    
+    def delete_sensor_data(self, sensor_id):
+        query = f"""
+            DELETE FROM sensor_data
+            WHERE sensor_id = {sensor_id} 
+        """
+        self.session.execute(query)

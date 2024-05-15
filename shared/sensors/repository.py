@@ -12,6 +12,7 @@ from shared.elasticsearch_client import ElasticsearchClient
 from shared.timescale import Timescale
 import json
 
+
 class DataCommand():
     def __init__(self, from_time, to_time, bucket):
         if not from_time or not to_time:
@@ -85,6 +86,8 @@ def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBCli
         "id": db_sensor.id,
         "longitude": sensor.longitude,
         "latitude": sensor.latitude,
+        # Convert to string for JSON serialization
+        "joined_at": db_sensor.joined_at.strftime("%m/%d/%Y, %H:%M:%S"),
         "type": sensor.type,
         "mac_address": sensor.mac_address,
         "manufacturer": sensor.manufacturer,
@@ -315,7 +318,6 @@ def get_sensors_near(db: Session, redis: RedisClient, mongodb: MongoDBClient, la
     list_document = mongodb.get_near_sensors(latitude, longitude, radius)
     list_sensors = []
 
-    return list_document[0]
     for document in list_document:
         sensor_id = document['id']
         db_sensor = get_sensor(db, mongodb, sensor_id)
@@ -337,20 +339,20 @@ def get_sensors_near(db: Session, redis: RedisClient, mongodb: MongoDBClient, la
                 raise HTTPException(
                     status_code=400, detail=f"Error parsing data for sensor {sensor_id}: {e}")
         # Construct the sensor object, using default values if dynamic data is missing
-        list_sensors.append(schemas.Sensor(
-            id=db_sensor["id"],
-            name=db_sensor['name'],
-            latitude=document.get('latitude', 0),
-            longitude=document.get('longitude', 0),
-            joined_at=db_sensor.joined_at.strftime("%m/%d/%Y, %H:%M:%S"),
-            last_seen=data_dict.get('last_seen', ''),
-            type=document.get('type', ''),
-            mac_address=document.get('mac_address', ''),
-            battery_level=data_dict.get('battery_level', 0),
-            temperature=data_dict.get('temperature', 0),
-            humidity=data_dict.get('humidity', 0),
-            velocity=data_dict.get('velocity', 0)
-        ))
+        list_sensors.append({
+            "id": db_sensor["id"],
+            "name": db_sensor["name"],
+            "latitude": document.get("latitude", 0),
+            "longitude": document.get("longitude", 0),
+            "joined_at": document["joined_at"],
+            "last_seen": data_dict.get("last_seen", ""),
+            "type": document.get("type", ""),
+            "mac_address": document.get("mac_address", ""),
+            "battery_level": data_dict.get("battery_level", 0),
+            "temperature": data_dict.get("temperature", 0),
+            "humidity": data_dict.get("humidity", 0),
+            "velocity": data_dict.get("velocity", 0)
+        })
 
     return list_sensors
 
@@ -452,6 +454,7 @@ def get_sensors_quantity(cassandra: CassandraClient):
         output["sensors"].append(row)
 
     return output
+
 
 def get_low_battery_sensors(db: Session, cassandra: CassandraClient, mongodb: MongoDBClient):
     output = {
