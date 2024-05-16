@@ -80,7 +80,6 @@ services:
         MONGO_URL: mongodb://mongodb:27017
         ELASTICSEARCH_URL: http://elasticsearch:9200
         CASSANDRA_URL: cassandra://cassandra:9042
-        RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       networks:
         - app_network
 

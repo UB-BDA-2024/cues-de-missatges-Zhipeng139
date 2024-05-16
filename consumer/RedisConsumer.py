@@ -8,32 +8,25 @@ from shared.subscriber import Subscriber
 from shared.redis_client import RedisClient
 from shared.message import MessageStrcuture
 
-# Dependency to get redis client
-def get_redis_client():
-    redis = RedisClient(host="redis")
-    try:
-        yield redis
-    finally:
-        redis.close()
-
 class RedisConsumer(Subscriber):
     def __init__(self, config):
         super().__init__(config)
 
     def consume(self):
         def callback(ch, method, properties, body: MessageStrcuture):
+            database = RedisClient(host="redis")
             message = json.loads(body)
             action = message.get("action")
             data = message.get("data")
-            database = RedisClient(host="redis")
 
             logging.info(f"Redis: Received message of action: {action}")
-            logging.info(f"Redis: Data: {data}")
+            logging.info(f"Redis: Data: {data}, type: {type(data)}")
 
             if action == "set_data":
+                logging.info(f"Redis: Setting data {data.get('data')} with key {data.get('sensor_id')}")
                 database.set(
-                    key=str(data.get("key")),
-                    value=data.get("data")
+                    key=str(data.get("sensor_id")),
+                    value=json.dumps(data.get("data"))
                 )
             else:
                 logging.error(f"Redis: Action {action} not supported")
@@ -48,6 +41,4 @@ class RedisConsumer(Subscriber):
             raise e
         
     def close(self):
-        super().close()
-        self.redis.close()
-    
+        super().close()    

@@ -57,6 +57,4 @@ class CassandraConsumer(Subscriber):
             raise e
         
     def close(self):
-        super().close()
-        self.redis.close()
-    
+        super().close()    

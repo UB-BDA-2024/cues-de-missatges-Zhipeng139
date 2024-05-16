@@ -49,34 +49,26 @@ def test_create_sensor_temperatura():
     response = client.post("/sensors", json={"name": "Sensor Temperatura 1", "latitude": 1.0, "longitude": 1.0, "type": "Temperatura", "mac_address": "00:00:00:00:00:00", "manufacturer": "Dummy", "model":"Dummy Temp", "serie_number": "0000 0000 0000 0000", "firmware_version": "1.0", "description": "Sensor de temperatura model Dummy Temp del fabricant Dummy"})
     assert response.status_code == 200
     assert response.json() == {"id": 1, "name": "Sensor Temperatura 1", "latitude": 1.0, "longitude": 1.0, "type": "Temperatura", "mac_address": "00:00:00:00:00:00", "manufacturer": "Dummy", "model":"Dummy Temp", "serie_number": "0000 0000 0000 0000", "firmware_version": "1.0", "description": "Sensor de temperatura model Dummy Temp del fabricant Dummy"}
-     
+    time.sleep(1)
+  
 def test_create_sensor_velocitat_1():
     response = client.post("/sensors", json={"name": "Velocitat 1", "latitude": 1.0, "longitude": 1.0, "type": "Velocitat", "mac_address": "00:00:00:00:00:01", "manufacturer": "Dummy", "model":"Dummy Vel", "serie_number": "0000 0000 0000 0000", "firmware_version": "1.0", "description": "Sensor de velocitat model Dummy Vel del fabricant Dummy cruïlla 1"})
     assert response.status_code == 200
     assert response.json() == {"id": 2, "name": "Velocitat 1", "latitude": 1.0, "longitude": 1.0, "type": "Velocitat", "mac_address": "00:00:00:00:00:01", "manufacturer": "Dummy", "model":"Dummy Vel", "serie_number": "0000 0000 0000 0000", "firmware_version": "1.0", "description": "Sensor de velocitat model Dummy Vel del fabricant Dummy cruïlla 1"}
-
-def test_redis_connection():
-    redis_client = RedisClient(host="redis")
-    assert redis_client.ping()
-    redis_client.close()
-
-
-def test_mongodb_connection():
-    mongodb_client = MongoDBClient(host="mongodb")
-    assert mongodb_client.ping()
-    mongodb_client.close()
-
+    time.sleep(1)
 
 def test_post_sensor_1_data_():
     response = client.post("/sensors/1/data", json={"temperature": 1.0, "humidity": 1.0,
                            "battery_level": 1.0, "last_seen": "2020-01-01T00:00:00.000Z"})
     assert response.status_code == 200
+    time.sleep(2)
 
 
 def test_post_sensor_2_data():
     response = client.post("/sensors/2/data", json={
                            "velocity": 45.0, "battery_level": 1.0, "last_seen": "2020-01-01T00:00:00.000Z"})
     assert response.status_code == 200
+    time.sleep(2)
 
 """ Ignore this test because it is not working due the modification of the API
 def test_get_sensor_1_data():

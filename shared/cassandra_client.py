@@ -1,9 +1,12 @@
 from cassandra.cluster import Cluster
+from cassandra.policies import DCAwareRoundRobinPolicy
+
 import logging
 class CassandraClient:
     def __init__(self, hosts):
         # Connect to the Cassandra cluster
-        self.cluster = Cluster(hosts, protocol_version=4)
+        self.cluster = Cluster(hosts, protocol_version=4,load_balancing_policy=DCAwareRoundRobinPolicy(local_dc='datacenter1')
+)
         self.session = self.cluster.connect()
         self.session.execute("""
         CREATE KEYSPACE IF NOT EXISTS sensor

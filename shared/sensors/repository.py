@@ -14,18 +14,6 @@ from shared.message import MessageStrcuture
 from shared.publisher import Publisher
 import json
 
-
-class DataCommand():
-    def __init__(self, from_time, to_time, bucket):
-        if not from_time or not to_time:
-            raise ValueError("from_time and to_time must be provided")
-        if not bucket:
-            bucket = 'day'
-        self.from_time = from_time
-        self.to_time = to_time
-        self.bucket = bucket
-
-
 def get_sensor(db: Session, mongodb: MongoDBClient, sensor_id: int) -> Optional[models.Sensor]:
     db_sensor = db.query(models.Sensor).filter(
         models.Sensor.id == sensor_id).first()
@@ -76,13 +64,13 @@ def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBCli
     Returns:
         models.Sensor: The newly created sensor object from the SQL database.
     """
+
     # Create a new sensor record in the SQL database
     db_sensor = models.Sensor(name=sensor.name)
     db.add(db_sensor)
     db.commit()  # Save the sensor record to the database
     # Refresh the instance from the database, to get the generated ID
     db.refresh(db_sensor)
-
     # Prepare the sensor document for MongoDB
     document = {
         "id": db_sensor.id,
@@ -155,7 +143,7 @@ def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBCli
     return output
 
 
-def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor_id: int, ts_db: Timescale, data: schemas.SensorData, publisher: Publisher) -> schemas.Sensor:
+def record_data(db: Session, mongo_db: MongoDBClient, sensor_id: int, ts_db: Timescale, data: schemas.SensorData, publisher: Publisher) -> schemas.Sensor:
     """
     Updates sensor data in SQL database, Redis, and MongoDB, then returns the updated sensor information.
 
@@ -181,14 +169,13 @@ def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor
     # Convert sensor data to JSON string for Redis
     # Using .dict() method if data is a Pydantic model
     dyn_data = json.dumps(data.dict())
-
     # Update sensor data in Redis
     #redis.set(str(sensor_id), dyn_data)  # Ensure the key is a string
     meesage = MessageStrcuture(
         action_type="set_data",
         data={
             "sensor_id": sensor_id,
-            "data": dyn_data
+            "data": data.dict()
         }
     )
 
@@ -254,7 +241,7 @@ def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor
     return data_dict
 
 
-def get_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, timescale: Timescale, sensor_id: int, from_date: str, to_date: str, bucket_size: str) -> schemas.Sensor:
+def get_data(db: Session, mongo_db: MongoDBClient, timescale: Timescale, sensor_id: int, from_date: str, to_date: str, bucket_size: str) -> schemas.Sensor:
     """
     Retrieves sensor data from SQL database, Redis, and MongoDB, and returns a consolidated sensor object.
 
@@ -276,26 +263,11 @@ def get_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, timescale
         raise HTTPException(
             status_code=404, detail="Sensor not found in SQL database")
 
-    # Get the sensor's dynamic data from Redis
-    # Ensure sensor_id is a string for Redis keys
-    dyn_data = redis.get(str(sensor_id))
-    if dyn_data is None:
-        # Assuming it's critical to have dynamic data; otherwise, adjust the logic as necessary
-        raise HTTPException(
-            status_code=404, detail="Sensor dynamic data not found in Redis")
-
     # Retrieve the sensor document from MongoDB
     document = mongo_db.get_data(sensor_id)
     if document is None:
         raise HTTPException(
             status_code=404, detail="Sensor not found in MongoDB")
-
-    # Parse the dynamic data from Redis
-    try:
-        data_dict = json.loads(dyn_data)
-    except json.JSONDecodeError as e:
-        raise HTTPException(
-            status_code=400, detail=f"Error parsing dynamic data: {e}")
 
     timescale_data = timescale.get_data(
         sensor_id, from_date=from_date, to_date=to_date, bucket_size=bucket_size)

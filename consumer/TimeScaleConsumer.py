@@ -28,5 +28,4 @@ class TimeScaleConsumer(Subscriber):
         
     def close(self):
         super().close()
-        self.redis.close()
     
