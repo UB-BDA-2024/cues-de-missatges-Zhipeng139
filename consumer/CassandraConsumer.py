@@ -25,12 +25,27 @@ class CassandraConsumer(Subscriber):
                     sensor_id=data.get("sensor_id"),
                     sensor_type=data.get("sensor_type"),
                 )
+            elif action == "insert_data":
+                database.insert_data(
+                    sensor_id=data.get("sensor_id"),
+                    last_seen=data.get("last_seen"),
+                    sensor_type=data.get("sensor_type"),
+                    temperature=data.get("temperature"),
+                    velocity=data.get("velocity"),
+                )
+            elif action == "insert_battery_level":
+                database.insert_battery_level(
+                    sensor_id=data.get("sensor_id"),
+                    battery_level=data.get("battery_level")
+                )
             elif action == "delete":
                 database.delete_sensor_data(
                     sensor_id=data.get("sensor_id"),
                 )
             else:
                 logging.error(f"Cassandra: Action {action} not supported")
+            
+            database.close()
 
             
         try:

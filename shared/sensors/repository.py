@@ -15,7 +15,6 @@ from shared.publisher import Publisher
 import json
 
 
-
 class DataCommand():
     def __init__(self, from_time, to_time, bucket):
         if not from_time or not to_time:
@@ -118,7 +117,7 @@ def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBCli
 
         elastic.create_mapping(elastic_index_name, mapping)
 
-    #cassandra.insert_sensor_type(db_sensor.id, sensor.type)
+    # cassandra.insert_sensor_type(db_sensor.id, sensor.type)
     message = MessageStrcuture(
         action_type="insert_sensor_type",
         data={
@@ -128,7 +127,6 @@ def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBCli
     )
     # Publish message to RabbitMQ
     publish.publish_to("cassandra", message)
-
 
     elastic_doc = {
         "id": db_sensor.id,
@@ -157,7 +155,7 @@ def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBCli
     return output
 
 
-def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor_id: int, ts_db: Timescale, data: schemas.SensorData, cassandra: CassandraClient) -> schemas.Sensor:
+def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor_id: int, ts_db: Timescale, data: schemas.SensorData, publisher: Publisher) -> schemas.Sensor:
     """
     Updates sensor data in SQL database, Redis, and MongoDB, then returns the updated sensor information.
 
@@ -211,6 +209,7 @@ def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor
                       battery_level=data.battery_level,
                       last_seen=data.last_seen)
 
+    """
     cassandra.insert_data(sensor_id,
                           last_seen=data.last_seen,
                           sensor_type=db_sensor['type'],
@@ -218,6 +217,30 @@ def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor
                           velocity=data.velocity)
 
     cassandra.insert_battery_level(sensor_id, data.battery_level)
+    """
+
+    message = MessageStrcuture(
+        action_type="insert_data",
+        data={
+            "sensor_id": sensor_id,
+            "last_seen": data.last_seen,
+            "sensor_type": db_sensor['type'],
+            "temperature": data.temperature,
+            "velocity": data.velocity
+        }
+    )
+
+    publisher.publish_to("cassandra", message)
+
+    message = MessageStrcuture(
+        action_type="insert_battery_level",
+        data={
+            "sensor_id": sensor_id,
+            "battery_level": data.battery_level
+        }
+    )
+    
+    publisher.publish_to("cassandra", message)
 
     return data_dict
 

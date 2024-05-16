@@ -148,7 +148,7 @@ def delete_sensor(sensor_id: int, db: Session = Depends(get_db), mongodb_client:
 @router.post("/{sensor_id}/data")
 def record_data(sensor_id: int, data: schemas.SensorData, db: Session = Depends(get_db), redis_client: RedisClient = Depends(get_redis_client), mongodb_client: MongoDBClient = Depends(get_mongodb_client), timescale: Timescale = Depends(get_timescale), cassandra_client: CassandraClient = Depends(get_cassandra_client)):
     # return timescale.information()
-    return repository.record_data(db=db, redis=redis_client, mongo_db=mongodb_client, sensor_id=sensor_id, ts_db=timescale, data=data, cassandra=cassandra_client)
+    return repository.record_data(db=db, redis=redis_client, mongo_db=mongodb_client, sensor_id=sensor_id, ts_db=timescale, data=data, publisher=publisher)
 
 
 # 
