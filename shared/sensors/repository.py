@@ -143,7 +143,7 @@ def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBCli
     return output
 
 
-def record_data(db: Session, mongo_db: MongoDBClient, sensor_id: int, ts_db: Timescale, data: schemas.SensorData, publisher: Publisher) -> schemas.Sensor:
+def record_data(db: Session, mongo_db: MongoDBClient, sensor_id: int, data: schemas.SensorData, publisher: Publisher) -> schemas.Sensor:
     """
     Updates sensor data in SQL database, Redis, and MongoDB, then returns the updated sensor information.
 
@@ -197,13 +197,28 @@ def record_data(db: Session, mongo_db: MongoDBClient, sensor_id: int, ts_db: Tim
         raise HTTPException(status_code=400, detail=f"Error parsing data: {e}")
 
     # Insert sensor data into TimescaleDB
-
+    """
     ts_db.insert_data(sensor_id,
                       velocity=data.velocity,
                       temperature=data.temperature,
                       humidity=data.humidity,
                       battery_level=data.battery_level,
                       last_seen=data.last_seen)
+    """
+
+    meesage = MessageStrcuture(
+        action_type="insert_data",
+        data={
+            "sensor_id": sensor_id,
+            "velocity": data.velocity if hasattr(data, 'velocity') else None,
+            "temperature": data.temperature if hasattr(data, 'temperature') else None,
+            "humidity": data.humidity,
+            "battery_level": data.battery_level,
+            "last_seen": data.last_seen
+        }
+    )
+
+    publisher.publish_to("ts", meesage)
 
     """
     cassandra.insert_data(sensor_id,

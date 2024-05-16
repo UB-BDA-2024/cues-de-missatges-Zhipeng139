@@ -156,12 +156,11 @@ def delete_sensor(sensor_id: int, db: Session = Depends(get_db), mongodb_client:
 
 # 🙋🏽‍♀️ Add here the route to update a sensor
 @router.post("/{sensor_id}/data")
-def record_data(sensor_id: int, data: schemas.SensorData, db: Session = Depends(get_db), mongodb_client: MongoDBClient = Depends(get_mongodb_client), timescale: Timescale = Depends(get_timescale)):
+def record_data(sensor_id: int, data: schemas.SensorData, db: Session = Depends(get_db), mongodb_client: MongoDBClient = Depends(get_mongodb_client)):
     # return timescale.information()
     return repository.record_data(db=db,
                                   mongo_db=mongodb_client,
                                   sensor_id=sensor_id,
-                                  ts_db=timescale,
                                   data=data,
                                   publisher=publisher)
 
