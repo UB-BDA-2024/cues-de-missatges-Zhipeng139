@@ -12,7 +12,6 @@ from shared.sensors.repository import DataCommand
 from shared.timescale import Timescale
 from shared.sensors import repository, schemas
 from shared.cassandra_client import CassandraClient
-from shared.subscriber import Subscriber
 
 router = APIRouter(
     prefix="/sensors",
@@ -114,12 +113,12 @@ def get_sensors(db: Session = Depends(get_db)):
 
 # 🙋🏽‍♀️ Add here the route to create a sensor
 @router.post("")
-def create_sensor(sensor: schemas.SensorCreate, db: Session = Depends(get_db), mongodb_client: MongoDBClient = Depends(get_mongodb_client), elastic: ElasticsearchClient = Depends(get_elastic_search), cassandra_client: CassandraClient = Depends(get_cassandra_client)):
+def create_sensor(sensor: schemas.SensorCreate, db: Session = Depends(get_db), mongodb_client: MongoDBClient = Depends(get_mongodb_client), elastic: ElasticsearchClient = Depends(get_elastic_search)):
     db_sensor = repository.get_sensor_by_name(db, sensor.name)
     if db_sensor:
         raise HTTPException(
             status_code=400, detail="Sensor with same name already registered")
-    return repository.create_sensor(db, sensor, mongodb_client, elastic, cassandra_client)
+    return repository.create_sensor(db, sensor, mongodb_client, elastic, publisher)
 
 
 # 🙋🏽‍♀️ Add here the route to get a sensor by id
@@ -175,6 +174,7 @@ class ExamplePayload():
 
     def to_json(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
+    
 @router.post("/exemple/queue")
 def exemple_queue():
     # Publish here the data to the queue
@@ -184,5 +184,5 @@ def exemple_queue():
 @router.post("/exemple/queue2")
 def exemple_queue():
     # Publish here the data to the queue
-    publisher.publish_to('test2',ExamplePayload("holaaaaa2"))
+    publisher.publish_to('redis',ExamplePayload("holaaaaa2"))
     return {"message": "Data published to the queue"}

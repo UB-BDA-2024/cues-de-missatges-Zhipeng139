@@ -58,11 +58,29 @@ services:
         - ./shared:/app/shared
         - ./consumer:/app/consumer
       depends_on:
+        - redis
+        - timescale
+        - cassandra
         - rabbitmq
       environment:
         RABBITMQ_HOST: rabbitmq
         RABBITMQ_PORT: 5672 
         PYTHONPATH: /app/shared:/app/consumer
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: postgres
+        POSTGRES_HOST: postgreSQL
+        POSTGRES_PORT: 5432
+        TS_USER: timescale
+        TS_PASSWORD: timescale
+        TS_DB: timescale
+        TS_HOST: timescale
+        TS_PORT: 5433
+        REDIS_URL: redis://redis:6379
+        MONGO_URL: mongodb://mongodb:27017
+        ELASTICSEARCH_URL: http://elasticsearch:9200
+        CASSANDRA_URL: cassandra://cassandra:9042
+        RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       networks:
         - app_network
 

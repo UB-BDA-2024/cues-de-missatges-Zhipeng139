@@ -2,7 +2,7 @@ import pika
 import logging
 import json
 import time
-
+from shared.message import MessageStrcuture
 logging.basicConfig(level=logging.INFO)
 
 QUEUE_NAME = 'test'
@@ -43,7 +43,7 @@ class Publisher:
             self.channel.queue_declare(queue=queue_name)
             logging.info(f"Queue '{queue_name}' created")
             
-    def publish(self, message):
+    def publish(self, message: MessageStrcuture):
         try:
             self.channel.basic_publish(exchange='', routing_key=QUEUE_NAME, body=message.to_json())
             logging.info(f" [x] Sent {message}")
@@ -51,7 +51,7 @@ class Publisher:
             logging.error(f"Failed to publish message: {e}")
             raise e
         
-    def publish_to(self, routing_key, message):
+    def publish_to(self, routing_key, message: MessageStrcuture):
         try:
             self._declare_queue(routing_key)
             self.channel.basic_publish(

@@ -6,6 +6,7 @@ from threading import Thread
 class Subscriber:
     def __init__(self, config):
         self.queue_name = config['queue_name']
+        print(f"Queue name: {self.queue_name}")
         self.credentials = pika.PlainCredentials(config['rabbitmq']['username'], config['rabbitmq']['password'])
         self.parameters = pika.ConnectionParameters(config['rabbitmq']['host'], config['rabbitmq']['port'], '/', self.credentials)
         self.conn = None
@@ -13,14 +14,14 @@ class Subscriber:
         self.connect()
 
     def connect(self):
-        retries = 3
+        retries = 5
         for attempt in range(retries):
             try:
                 logging.info(f"Attempting to connect to RabbitMQ (attempt {attempt + 1}/{retries})")
                 self.conn = pika.BlockingConnection(self.parameters)
                 self.channel = self.conn.channel()
                 self.channel.queue_declare(queue=self.queue_name)
-                logging.info("Successfully connected to RabbitMQ")
+                logging.info(f"Successfully connected to RabbitMQ, queue name: {self.queue_name}")
                 break
             except pika.exceptions.AMQPConnectionError as e:
                 logging.error(f"Connection attempt {attempt + 1} failed: {e}")

@@ -10,7 +10,10 @@ from shared.sensors import models, schemas
 from shared.cassandra_client import CassandraClient
 from shared.elasticsearch_client import ElasticsearchClient
 from shared.timescale import Timescale
+from shared.message import MessageStrcuture
+from shared.publisher import Publisher
 import json
+
 
 
 class DataCommand():
@@ -62,7 +65,7 @@ def get_sensors(db: Session, skip: int = 0, limit: int = 100) -> List[models.Sen
     return db.query(models.Sensor).offset(skip).limit(limit).all()
 
 
-def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBClient, elastic: ElasticsearchClient, cassandra: CassandraClient) -> models.Sensor:
+def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBClient, elastic: ElasticsearchClient, publish: Publisher) -> models.Sensor:
     """
     Creates a new sensor record in both SQL and MongoDB databases.
 
@@ -115,7 +118,17 @@ def create_sensor(db: Session, sensor: schemas.SensorCreate, mongodb: MongoDBCli
 
         elastic.create_mapping(elastic_index_name, mapping)
 
-    cassandra.insert_sensor_type(db_sensor.id, sensor.type)
+    #cassandra.insert_sensor_type(db_sensor.id, sensor.type)
+    message = MessageStrcuture(
+        action_type="insert_sensor_type",
+        data={
+            "sensor_id": db_sensor.id,
+            "sensor_type": sensor.type
+        }
+    )
+    # Publish message to RabbitMQ
+    publish.publish_to("cassandra", message)
+
 
     elastic_doc = {
         "id": db_sensor.id,

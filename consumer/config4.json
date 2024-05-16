@@ -1,5 +1,5 @@
 {
-    "queue_name": "redis",
+    "queue_name": "cassandra",
     "rabbitmq": {
       "host": "rabbitmq",
       "port": 5672,
