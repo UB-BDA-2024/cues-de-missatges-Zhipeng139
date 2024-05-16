@@ -19,11 +19,25 @@ def get_redis_client():
 class RedisConsumer(Subscriber):
     def __init__(self, config):
         super().__init__(config)
-        self.database = RedisClient(host="redis")
 
     def consume(self):
         def callback(ch, method, properties, body: MessageStrcuture):
-            logging.info(f"Redis: Received message: {body}")
+            message = json.loads(body)
+            action = message.get("action")
+            data = message.get("data")
+            database = RedisClient(host="redis")
+
+            logging.info(f"Redis: Received message of action: {action}")
+            logging.info(f"Redis: Data: {data}")
+
+            if action == "set_data":
+                database.set(
+                    key=str(data.get("key")),
+                    value=data.get("data")
+                )
+            else:
+                logging.error(f"Redis: Action {action} not supported")
+            database.close()
 
         try:
             self.channel.basic_consume(queue=self.queue_name, on_message_callback=callback, auto_ack=True)

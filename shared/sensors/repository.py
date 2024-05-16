@@ -183,7 +183,16 @@ def record_data(db: Session, redis: RedisClient, mongo_db: MongoDBClient, sensor
     dyn_data = json.dumps(data.dict())
 
     # Update sensor data in Redis
-    redis.set(str(sensor_id), dyn_data)  # Ensure the key is a string
+    #redis.set(str(sensor_id), dyn_data)  # Ensure the key is a string
+    meesage = MessageStrcuture(
+        action_type="set_data",
+        data={
+            "sensor_id": sensor_id,
+            "data": dyn_data
+        }
+    )
+
+    publisher.publish_to("redis", meesage)
 
     # Check if the sensor exists in MongoDB
     document = mongo_db.get_data(sensor_id)
